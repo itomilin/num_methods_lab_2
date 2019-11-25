@@ -22,11 +22,13 @@ program main
                           vector_b(N_SIZE), &
                           vector_g(N_SIZE), &
                           vector_z(N_SIZE), &
-                          vector_n(N_SIZE)
+                          vector_n(N_SIZE), &
+                          vector_x(N_SIZE) ! Solution vector
 
     real               :: WORK(N_SIZE), COND, CONDP1, max_g
 
-do l = 1, size(vector_beta)
+do l = 1, size(vector_beta) ! Spin 4 time
+
     write (*, '(A, 1I1, A, F6.3, A)') "=====[", l, "]=====Рассчет при значении Beta: ", vector_beta(l), "======="
     left_sum = 0
     right_sum = 0
@@ -44,7 +46,7 @@ do l = 1, size(vector_beta)
 
     ! Calculate the free vector
     do i = 1, N_SIZE
-        if (i == 1) then
+        if ( i == 1 ) then
             left_sum = 0
         else
             do k = 1, i - 1
@@ -74,7 +76,7 @@ do l = 1, size(vector_beta)
     ! Fill the matrix
     do column = 1, N_SIZE
         do row = 1, N_SIZE
-            if ( column == 1) then
+            if ( column == 1 ) then
                 matrix(column, row) = vector_a(column)
             else if (column == 2 .and. row >= 2) then
                 matrix(column, row) = vector_a(column)
@@ -103,7 +105,7 @@ do l = 1, size(vector_beta)
     ! Rewrite number An * Bn
     do column = 1, N_SIZE
         do row = 1, N_SIZE
-            if ( column == 1) then
+            if ( column == 1 ) then
                 matrix(column, row) = matrix(column, row) * vector_b(row)
             else if (column == 2 .and. row >= 2) then
                 matrix(column, row) = matrix(column, row) * vector_b(row)
@@ -125,13 +127,15 @@ do l = 1, size(vector_beta)
     PRINT 101, ((matrix(i,j), j = 1, N_SIZE), vector_z(i), i = 1, N_SIZE)
     Call decomp(N_SIZE, N_DIMENSION, matrix, cond, ipvt, work)
 
-    print "(/)"
+    !print "(/)"
     PRINT 102, COND
     CONDP1 = COND + 1.0
     IF(CONDP1.EQ.COND) PRINT 103
     IF(CONDP1.EQ.COND) STOP
 
     Call SOLVE(N_SIZE, N_DIMENSION, matrix, vector_z, IPVT)
+
+    vector_x = vector_z ! Fill solution vector
 
     ! MATRIX AFTER DECOMP (DEBUG)
     !do column = 1, N_SIZE
@@ -141,25 +145,21 @@ do l = 1, size(vector_beta)
     !    print "(/)"
     !end do
 
-    PRINT 104, (vector_z(i), i = 1, N_SIZE)
+    PRINT 104, (vector_x(i), i = 1, N_SIZE)
     !STOP
-    101 FORMAT(15X, 'Q', 35X, 'Z', 5(/1X, 5F7.2, 5X, F12.7))
-    102 FORMAT(5X,'COND: ', E12.5)
+    101 FORMAT(19X, 'Q', 28X, 'Z', 5(//1X, 5F7.2, 5X, F12.7))
+    102 FORMAT(/'Число обусловленности матрицы Q (COND): ', E12.5)
     103 FORMAT(5X,'MATPИЦA KЛACCИФИЦИPУETCЯ KAK BЫPOЖДEHHAЯ')
-    104 FORMAT(5X,'BEKTOP PEШEHИЯ         X', 5(/18X, F15.7))
+    104 FORMAT(/5X,'BEKTOP PEШEHИЯ         X', 5(/18X, F15.7))
 
 
     max_g = abs( maxval(vector_g) )
+    vector_n = abs( vector_x - vector_g )
 
 
-    do i = 1, N_SIZE
-        vector_n(i) = abs( vector_z(i) - vector_g(i) )
-    end do
-    print "(/)"
-
-
-    write (*, '(A, F4.2)') "Норма MAX вектора G: ", max_g
+    write (*, '(/A, F4.2)') "Норма MAX вектора G: ", max_g
     write (*, '(A, F9.7)') "Норма MAX вектора X - G: ", abs( maxval(vector_n) )
-    write (*, '(A, F9.7)') "Погрешность: ", abs( abs( maxval(vector_n) ) / max_g )
+    write (*, '(A, F9.7/)') "Погрешность: ", abs( abs( maxval(vector_n) ) / max_g )
 end do
+
 end

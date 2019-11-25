@@ -31,7 +31,9 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="decomp.f95" />
 		<Unit filename="main.f95" />
+		<Unit filename="solve.f95" />
 		<Extensions>
 			<envvars />
 			<code_completion />
